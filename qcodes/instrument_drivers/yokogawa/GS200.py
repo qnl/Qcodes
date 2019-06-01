@@ -455,6 +455,9 @@ class GS200(VisaInstrument):
         if self._cached_mode != mode:
             raise ValueError("Cannot get/set {} settings while in {} mode".format(mode, self._cached_mode))
 
+    def _get_source_mode(self):
+        return self.ask("SOUR:FUNC?")
+
     def _set_source_mode(self, mode: str) -> None:
         """
         Set output mode

@@ -147,8 +147,8 @@ class Tektronix_AWG5014(VisaInstrument):
         Initializes the AWG5014.
 
         Args:
-            name (str): name of the instrument
-            address (str): GPIB or ethernet address as used by VISA
+            name (string): name of the instrument
+            address (string): GPIB or ethernet address as used by VISA
             timeout (float): visa timeout, in secs. long default (180)
                 to accommodate large waveforms
             num_channels (int): number of channels on the device
@@ -264,6 +264,12 @@ class Tektronix_AWG5014(VisaInstrument):
                            set_cmd='TRIGger:SOURce ' + '{}',
                            vals=vals.Enum('INT', 'EXT'),
                            get_parser=self.newlinestripper)
+
+        self.add_parameter('trigger_seq_timer',
+                           get_cmd='TRIGger:SEQuence:TIMer?',
+                           set_cmd='TRIGger:SEQuence:TIMer ' + '{}NS',
+                           vals=vals.Numbers(0, 1e9),
+                           get_parser=float)
 
         # Event parameters
         self.add_parameter('event_polarity',
@@ -1193,7 +1199,7 @@ class Tektronix_AWG5014(VisaInstrument):
 
         Args:
             packed_waveforms (dict): dictionary containing packed waveforms
-                with keys wfname_l
+            with keys wfname_l
 
             wfname_l (numpy.ndarray): array of waveform names, e.g.
                 array([[segm1_ch1,segm2_ch1..], [segm1_ch2,segm2_ch2..],...])
@@ -1417,7 +1423,7 @@ class Tektronix_AWG5014(VisaInstrument):
             """
         packed_wfs = {}
         waveform_names = []
-        if not isinstance(waveforms[0], list):
+        if not (isinstance(waveforms[0], list) or isinstance(waveforms[0], np.ndarray)):
             waveforms = [waveforms]
             m1s = [m1s]
             m2s = [m2s]
@@ -1630,9 +1636,12 @@ class Tektronix_AWG5014(VisaInstrument):
         if not np.all(np.in1d(m2, np.array([0, 1]))):
             raise TypeError('Marker 2 contains invalid values.' +
                             ' Only 0 and 1 are allowed')
-
+        # print(f'wf shape: {wf.shape}')
+        # print(f'm1 shape: {m1.shape}')
+        # print(f'm2 shape: {m2.shape}')
         wflen = len(wf)
         packed_wf = np.zeros(wflen, dtype=np.uint16)
+        # print(f'packed_wf shape: {packed_wf .shape}')
         packed_wf += np.uint16(np.round(wf * 8191) + 8191 +
                                np.round(16384 * m1) +
                                np.round(32768 * m2))

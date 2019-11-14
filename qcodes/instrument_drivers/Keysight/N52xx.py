@@ -361,8 +361,8 @@ class PNABase(VisaInstrument):
                            get_parser=float,
                            set_cmd='SENS:FREQ:SPAN {}',
                            unit='Hz',
-                           vals=Numbers(min_value=min_freq,
-                                        max_value=max_freq))
+                           vals=Numbers(min_value=0,
+                                        max_value=(max_freq - min_freq)/2.0))
 
         # Number of points in a sweep
         self.add_parameter('points',

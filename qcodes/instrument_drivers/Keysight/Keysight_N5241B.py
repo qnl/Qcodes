@@ -324,6 +324,12 @@ class N5241B(PNABase):
                            set_cmd=':SENS1:AVER:COUN {}',
                            get_parser=int)
 
+        self.add_parameter('display_on',
+                           label='Display on (1) or off (0)',
+                           get_cmd=':DISP:VIS?',
+                           set_cmd=':DISP:VIS {}',
+                           get_parser=int)
+
         self.add_parameter('averaging',
                            label='Enable Averaging',
                            get_cmd=':SENS:AVER?',

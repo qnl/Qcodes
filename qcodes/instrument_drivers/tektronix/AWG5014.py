@@ -147,8 +147,8 @@ class Tektronix_AWG5014(VisaInstrument):
         Initializes the AWG5014.
 
         Args:
-            name (string): name of the instrument
-            address (string): GPIB or ethernet address as used by VISA
+            name (str): name of the instrument
+            address (str): GPIB or ethernet address as used by VISA
             timeout (float): visa timeout, in secs. long default (180)
                 to accommodate large waveforms
             num_channels (int): number of channels on the device
@@ -396,7 +396,7 @@ class Tektronix_AWG5014(VisaInstrument):
                     unit='V',
                     get_cmd=m_high_cmd + '?',
                     set_cmd=m_high_cmd + ' {:.3f}',
-                    vals=vals.Numbers(-0.9, 2.7),
+                    vals=vals.Numbers(-2.7, 2.7),
                     get_parser=float)
                 self.add_parameter(
                     'ch{}_m{}_low'.format(i, j),
@@ -404,7 +404,7 @@ class Tektronix_AWG5014(VisaInstrument):
                     unit='V',
                     get_cmd=m_low_cmd + '?',
                     set_cmd=m_low_cmd + ' {:.3f}',
-                    vals=vals.Numbers(-1.0, 2.6),
+                    vals=vals.Numbers(-2.7, 2.7),
                     get_parser=float)
 
         self.set('trigger_impedance', 50)
@@ -1636,12 +1636,9 @@ class Tektronix_AWG5014(VisaInstrument):
         if not np.all(np.in1d(m2, np.array([0, 1]))):
             raise TypeError('Marker 2 contains invalid values.' +
                             ' Only 0 and 1 are allowed')
-        # print(f'wf shape: {wf.shape}')
-        # print(f'm1 shape: {m1.shape}')
-        # print(f'm2 shape: {m2.shape}')
+
         wflen = len(wf)
         packed_wf = np.zeros(wflen, dtype=np.uint16)
-        # print(f'packed_wf shape: {packed_wf .shape}')
         packed_wf += np.uint16(np.round(wf * 8191) + 8191 +
                                np.round(16384 * m1) +
                                np.round(32768 * m2))

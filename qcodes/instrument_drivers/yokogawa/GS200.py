@@ -190,19 +190,25 @@ class GS200(VisaInstrument):
         # When getting the mode internally in the driver, look up the mode as recorded by the _cached_mode property,
         # instead of calling source_mode(). This will prevent frequent VISA calls to the instrument. Calling
         # _set_source_mode will change the chased value.
-        self._cached_mode = "VOLT"
+        # self._cached_mode = "VOLT"
+        # The above line causes an issue if the source is already in CURR mode. Instead we will set _cached_mode to the
+        # setting from _get_source_mode
+        self._cached_mode = self._get_source_mode()
+        print(f'cached_mode: {self._cached_mode}')
 
         # We want to cache the range value so communication with the instrument only happens when the set the
         # range. Getting the range always returns the cached value. This value is adjusted when calling
         # self._set_range
-        self._cached_range_value = None # type: Optional[Union[float,int]]
+        # self._cached_range_value = None # type: Optional[Union[float,int]]
+        self._cached_range_value = self._get_range(self._cached_mode)
 
         self.add_parameter('voltage_range',
                            label='Voltage Source Range',
                            unit='V',
                            get_cmd=partial(self._get_range, "VOLT"),
                            set_cmd=partial(self._set_range, "VOLT"),
-                           vals=Enum(10e-3, 100e-3, 1e0, 10e0, 30e0))
+                           vals=Enum(10e-3, 100e-3, 1e0, 10e0, 30e0),
+                           snapshot_exclude=(self._cached_mode == 'VOLT'))
 
         # The driver is initialized in the volt mode. In this mode we cannot
         # get 'current_range'. Hence the snapshot is excluded.
@@ -212,11 +218,14 @@ class GS200(VisaInstrument):
                            get_cmd=partial(self._get_range, "CURR"),
                            set_cmd=partial(self._set_range, "CURR"),
                            vals=Enum(1e-3, 10e-3, 100e-3, 200e-3),
-                           snapshot_exclude=True
+                           snapshot_exclude=(self._cached_mode == 'CURR')
                            )
 
         # This is changed through the source_mode interface
-        self.range = self.voltage_range
+        if self._cached_mode == 'VOLT':
+            self.range = self.voltage_range
+        else:
+            self.range = self.current_range
 
         self._auto_range = False
         self.add_parameter('auto_range',
@@ -229,7 +238,8 @@ class GS200(VisaInstrument):
                            label='Voltage',
                            unit='V',
                            set_cmd=partial(self._get_set_output, "VOLT"),
-                           get_cmd=partial(self._get_set_output, "VOLT")
+                           get_cmd=partial(self._get_set_output, "VOLT"),
+                           snapshot_exclude = (self._cached_mode == 'CURR')
                            )
         # Again, at init we are in "VOLT" mode. Hence, exclude the snapshot of
         # 'current' as instrument does not support this parameter in
@@ -239,11 +249,14 @@ class GS200(VisaInstrument):
                            unit='I',
                            set_cmd=partial(self._get_set_output, "CURR"),
                            get_cmd=partial(self._get_set_output, "CURR"),
-                           snapshot_exclude=True
+                           snapshot_exclude=(self._cached_mode == 'CURR')
                            )
 
         # This is changed through the source_mode interface
-        self.output_level = self.voltage
+        if self._cached_mode == 'VOLT':
+            self.output_level = self.voltage
+        else:
+            self.output_level = self.current
 
         self.add_parameter('voltage_limit',
                            label='Voltage Protection Limit',

@@ -48,8 +48,8 @@ class E4405B(VisaInstrument):
                            vals=vals.Numbers(min_value=1,
                                         max_value=13.2e9))
 
-        self.add_parameter(name='resolution_bandwith',
-                           label='resolution_bandwith',
+        self.add_parameter(name='resolution_bandwidth',
+                           label='resolution_bandwidth',
                            unit='Hz',
                            get_cmd='BAND?',
                            set_cmd='BAND {}',

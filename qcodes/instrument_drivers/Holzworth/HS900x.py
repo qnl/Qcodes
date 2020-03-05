@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from qcodes import VisaInstrument
+from qcodes import VisaInstrument, IPInstrument
 from qcodes.utils.validators import Numbers
 
 
 class HS900x(VisaInstrument):
     """
     This is a QCoDes driver for the Holzworth HS900x series Multi-channel RF synthesizers.
-    Developed in-house at QNL.
+    Developed in-house at QNL. Does not work.
     """
 
     def __init__(self, name, address, **kwargs):

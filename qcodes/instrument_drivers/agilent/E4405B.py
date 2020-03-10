@@ -72,3 +72,13 @@ class E4405B(VisaInstrument):
                            get_cmd=':CALC:MARK:Y?',
                            get_parser=float,
                            vals=vals.Numbers(-100, 20))
+
+    def disconnect(self):
+        """Disconnect from the instrument, thereby allowing new instruments to connect"""
+        self.__del__()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, tb):
+        self.disconnect()

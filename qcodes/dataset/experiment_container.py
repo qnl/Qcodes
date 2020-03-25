@@ -141,10 +141,7 @@ class Experiment(Sized):
     def data_sets(self) -> List[DataSet]:
         """Get all the datasets of this experiment"""
         runs = get_runs(self.conn, self.exp_id)
-        data_sets = []
-        for run in runs:
-            data_sets.append(load_by_id(run['run_id'], conn=self.conn))
-        return data_sets
+        return [load_by_id(run['run_id'], conn=self.conn) for run in runs]
 
     def last_data_set(self) -> DataSet:
         """Get the last dataset of this experiment"""
@@ -164,35 +161,34 @@ class Experiment(Sized):
         return len(self.data_sets())
 
     def __repr__(self) -> str:
-        out = []
-        heading = (f"{self.name}#{self.sample_name}#{self.exp_id}"
-                   f"@{self.path_to_db}")
-        out.append(heading)
-        out.append("-" * len(heading))
-        ds = self.data_sets()
-        if len(ds) > 0:
-            for d in ds:
-                out.append(f"{d.run_id}-{d.name}-{d.counter}"
-                           f"-{d.parameters}-{len(d)}")
-
+        out = [
+            f"{self.name}#{self.sample_name}#{self.exp_id}@{self.path_to_db}"
+        ]
+        out.append("-" * len(out[0]))
+        out += [
+            f"{d.run_id}-{d.name}-{d.counter}-{d.parameters}-{len(d)}"
+            for d in self.data_sets()
+        ]
         return "\n".join(out)
 
 
 # public api
 
-def experiments()->List[Experiment]:
+def experiments(conn: Optional[ConnectionPlus] = None) -> List[Experiment]:
     """
     List all the experiments in the container (database file from config)
+
+    Args:
+        conn: connection to the database. If not supplied, a new connection
+          to the DB file specified in the config is made
 
     Returns:
         All the experiments in the container
     """
-    log.info("loading experiments from {}".format(get_DB_location()))
-    rows = get_experiments(connect(get_DB_location(), get_DB_debug()))
-    experiments = []
-    for row in rows:
-        experiments.append(load_experiment(row['exp_id']))
-    return experiments
+    conn = conn_from_dbpath_or_conn(conn=conn, path_to_db=None)
+    log.info("loading experiments from {}".format(conn.path_to_dbfile))
+    rows = get_experiments(conn)
+    return [load_experiment(row['exp_id'], conn) for row in rows]
 
 
 def new_experiment(name: str,
@@ -218,19 +214,23 @@ def new_experiment(name: str,
                       conn=conn)
 
 
-def load_experiment(exp_id: int) -> Experiment:
+def load_experiment(exp_id: int,
+                    conn: Optional[ConnectionPlus] = None) -> Experiment:
     """
     Load experiment with the specified id (from database file from config)
 
     Args:
         exp_id: experiment id
+        conn: connection to the database. If not supplied, a new connection
+          to the DB file specified in the config is made
 
     Returns:
         experiment with the specified id
     """
     if not isinstance(exp_id, int):
         raise ValueError('Experiment ID must be an integer')
-    return Experiment(exp_id=exp_id)
+    return Experiment(exp_id=exp_id,
+                      conn=conn)
 
 
 def load_last_experiment() -> Experiment:

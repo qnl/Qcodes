@@ -2,7 +2,7 @@
 import time
 import weakref
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Sequence, Optional, Dict, Union, Callable, Any, List, \
     TYPE_CHECKING, cast, Type
 
@@ -30,20 +30,6 @@ class InstrumentBase(Metadatable, DelegateAttributes):
             attaching it to a Station.
         metadata: additional static metadata to add to this
             instrument's JSON snapshot.
-
-
-    Attributes:
-        name (str): An identifier for this instrument, particularly for
-            attaching it to a Station.
-
-        parameters (Dict[Parameter]): All the parameters supported by this
-            instrument. Usually populated via ``add_parameter``.
-
-        functions (Dict[Function]): All the functions supported by this
-            instrument. Usually populated via ``add_function``.
-        submodules (Dict[Metadatable]): All the submodules of this instrument
-            such as channel lists or logical groupings of parameters.
-            Usually populated via ``add_submodule``.
     """
     def __init__(self, name: str,
                  metadata: Optional[Dict] = None) -> None:
@@ -51,9 +37,23 @@ class InstrumentBase(Metadatable, DelegateAttributes):
         self._short_name = str(name)
 
         self.parameters: Dict[str, _BaseParameter] = {}
+        """
+        All the parameters supported by this instrument.
+        Usually populated via :py:meth:`add_parameter`.
+        """
         self.functions: Dict[str, Function] = {}
+        """
+        All the functions supported by this
+        instrument. Usually populated via :py:meth:`add_function`.
+        """
         self.submodules: Dict[str, Union['InstrumentBase',
                                          'ChannelList']] = {}
+        """
+        All the submodules of this instrument
+        such as channel lists or logical groupings of parameters.
+        Usually populated via :py:meth:`add_submodule`.
+        """
+
         super().__init__(metadata)
 
         # This is needed for snapshot method to work
@@ -88,7 +88,7 @@ class InstrumentBase(Metadatable, DelegateAttributes):
                 shortcut methods: ``instrument.set(param_name, value)`` etc.
 
             parameter_class: You can construct the parameter
-                out of any class. Default ``StandardParameter``.
+                out of any class. Default :class:`.parameter.Parameter`.
 
             **kwargs: Constructor arguments for ``parameter_class``.
 
@@ -264,7 +264,8 @@ class InstrumentBase(Metadatable, DelegateAttributes):
                 # this may be a multi parameter
                 unit = snapshot['parameters'][par].get('units', None)
             if isinstance(val, floating_types):
-                msg += '\t{:.5g} '.format(val)
+                msg += '\t{:.5g} '.format(val)  # type: ignore[str-format]
+                # numpy float and int types format like builtins
             else:
                 msg += '\t{} '.format(val)
             if unit != '':  # corresponds to no unit
@@ -394,6 +395,7 @@ class AbstractInstrument(ABC):
     """ABC that is useful for defining mixin classes for Instrument class"""
     log: 'InstrumentLoggerAdapter'  # instrument logging
 
+    @abstractmethod
     def ask(self, cmd: str) -> str:
         pass
 
@@ -409,20 +411,6 @@ class Instrument(InstrumentBase, AbstractInstrument):
         metadata: additional static metadata to add to this
             instrument's JSON snapshot.
 
-
-    Attributes:
-        name (str): an identifier for this instrument, particularly for
-            attaching it to a Station.
-
-        parameters (Dict[Parameter]): All the parameters supported by this
-            instrument. Usually populated via ``add_parameter``
-
-        functions (Dict[Function]): All the functions supported by this
-            instrument. Usually populated via ``add_function``
-
-        submodules (Dict[Metadatable]): All the submodules of this instrument
-            such as channel lists or logical groupings of parameters.
-            Usually populated via ``add_submodule``
     """
 
     shared_kwargs = ()

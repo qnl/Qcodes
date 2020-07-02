@@ -106,7 +106,8 @@ class Keysight_E8267D(VisaInstrument):
                            get_parser=float,
                            set_parser=float,
                            vals=vals.Numbers(-130, 25))
-        self.add_parameter('status',
+        # self.add_parameter('status',
+        self.add_parameter('rf_output', ### MLu edit 2020-04-07 Instrument driver looks for key 'rf_output'
                            get_cmd=':OUTP?',
                            set_cmd='OUTP {}',
                            get_parser=parse_on_off,
@@ -114,7 +115,8 @@ class Keysight_E8267D(VisaInstrument):
         self.add_parameter(name='modulation_rf_enabled',
                            get_cmd='OUTP:MOD?',
                            set_cmd='OUTP:MOD {}',
-                           val_mapping=on_off_mapping)
+                           val_mapping={'on': 1, 'off': 0})
+                           # val_mapping=on_off_mapping)
         self.add_parameter('IQmodulator_enabled',
                            get_cmd='DM:STATe?',
                            set_cmd='DM:STATe {}',

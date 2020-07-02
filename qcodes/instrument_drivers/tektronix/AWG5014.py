@@ -1370,6 +1370,9 @@ class Tektronix_AWG5014(VisaInstrument):
         s = 'AWGControl:SREStore "{}"'.format(filename)
         log.debug('Loading awg file using {}'.format(s))
         self.visa_handle.write_raw(s)
+        ## Marie Edit 2020-03-18 to correct for the fact that loading a seq always set AWG CONT mode
+        set_cmd='AWGControl:RMODe SEQ'
+        self.write(set_cmd)
         # we must update the appropriate parameter(s) for the sequence
         self.sequence_length.set(self.sequence_length.get())
 
@@ -1516,8 +1519,10 @@ class Tektronix_AWG5014(VisaInstrument):
             preservechannelsettings=preservechannelsettings)
 
         # by default, an unusable directory is targeted on the AWG
+        ##MLu edits 2020-03-14 Changing directory from \\Users\\OEM\\Documents
+        ##to A:\\
         self.visa_handle.write('MMEMory:CDIRectory ' +
-                               '"C:\\Users\\OEM\\Documents"')
+                               'C:\\Users\\OEM\\Documents')
 
         self.send_awg_file(filename, awg_file)
         currentdir = self.visa_handle.query('MMEMory:CDIRectory?')

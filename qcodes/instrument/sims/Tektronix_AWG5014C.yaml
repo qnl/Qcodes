@@ -15,7 +15,9 @@ devices:
     properties:
 
       current_directory:
-        default: "\\Users\\OEM\\Documents"
+        #ML Edits 2020-03-14
+        #default: "\\Users\\OEM\\Documents"
+        default: "A:\\"
         getter:
           q: "MMEMory:CDIRectory?"
           r: "{}"

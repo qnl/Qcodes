@@ -66,11 +66,14 @@ class E8267(VisaInstrument):
                            get_parser=float,
                            vals=Numbers(min_value=-200,
                                         max_value=200))
-        self.add_parameter(name='output_rf',
+        # self.add_parameter(name='output_rf', ##MLu edit 2020-04-05(used to be called 'output_rf')
+        self.add_parameter(name='rf_output',
                            get_cmd='OUTP?',
                            set_cmd='OUTP {}',
-                           val_mapping={'OFF': 0,
-                                        'ON': 1})
+                           val_mapping={'off': 0,
+                                        'on': 1}) ##MLu edit 2020-04-05(used to be capitalized)but all other files used are lowercase
+                           # val_mapping={'OFF': 0,
+                           #              'ON': 1})
         self.add_parameter(name='modulation_rf',
                            get_cmd='OUTP:MOD?',
                            set_cmd='OUTP:MOD {}',

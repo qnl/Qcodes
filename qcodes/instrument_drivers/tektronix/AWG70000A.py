@@ -241,14 +241,22 @@ class AWGChannel(InstrumentChannel):
         # the manual claims that this command only works in AC mode
         # (OUTPut[n]:PATH is AC), but I've tested that it does what
         # one would expect in DIR mode.
-        self.add_parameter(
-            'awg_amplitude',
-            label='Channel {} AWG peak-to-peak amplitude'.format(channel),
-            set_cmd='SOURCe{}:VOLTage {{}}'.format(channel),
-            get_cmd='SOURce{}:VOLTage?'.format(channel),
-            unit='V',
-            get_parser=float,
-            vals=vals.Numbers(0.250, _chan_amps[self.model]))
+        self.add_parameter('awg_amplitude',
+                           label='Channel {} AWG peak-to-peak amplitude'.format(channel),
+                           set_cmd='SOURCe{}:VOLTage {{}}'.format(channel),
+                           get_cmd='SOURce{}:VOLTage?'.format(channel),
+                           unit='V',
+                           get_parser=float,
+                           vals=vals.Numbers(0.250, _chan_amps[self.model]))
+
+        self.add_parameter('awg_offset',
+                           label='Channel {} AWG offset '.format(channel),
+                           set_cmd='SOURce{}:VOLTage:LEVel:IMMediate:OFFS {{}}'.format(channel),
+                           get_cmd='SOURce{}:VOLTage:LEVel:IMMediate:OFFS?'.format(channel),
+                           unit='V',
+                           get_parser=float,
+                           vals=vals.Numbers(-2.25, 2.25),
+                           )
 
         self.add_parameter('assigned_asset',
                            label=('Waveform/sequence assigned to '
@@ -301,6 +309,13 @@ class AWGChannel(InstrumentChannel):
                            vals=vals.Enum(*_chan_resolutions[self.model]),
                            get_parser=int,
                            docstring=_chan_resolution_docstrings[self.model])
+
+        # Output signal path
+        self.add_parameter('signal_path',
+                           label='Channel {} signal path'.format(channel),
+                           get_cmd='OUTPut{}:PATH?'.format(channel),
+                           set_cmd='OUTPut{}:PATH {{}}'.format(channel),
+                           vals=vals.Enum('DCHB', 'ACD', 'ACAM', 'DCHV'))
 
     def _set_marker(self, channel: int, marker: int,
                     high: bool, voltage: float) -> None:
@@ -440,6 +455,14 @@ class AWG70000A(VisaInstrument):
                            val_mapping={'Stopped': '0',
                                         'Waiting for trigger': '1',
                                         'Running': '2'})
+
+        # Trigger functions
+        self.add_parameter('trigger_seq_timer',
+                           label='set the repetition time between two sequence',
+                           get_cmd='TRIGger:INTerval?',
+                           set_cmd='TRIGger:INTerval {}NS',
+                           vals=vals.Numbers(1, 1e9),
+                           get_parser=float)
 
         # We deem 2 channels too few for a channel list
         if self.num_channels > 2:
@@ -691,7 +714,7 @@ class AWG70000A(VisaInstrument):
         if not path:
             path = self.wfmxFileFolder
 
-        pathstr = 'C:' + path + '\\' + filename
+        pathstr = rf'{path}/{filename}'
 
         self.write('MMEMory:OPEN "{}"'.format(pathstr))
         # the above command is overlapping, but we want a blocking command
@@ -710,7 +733,7 @@ class AWG70000A(VisaInstrument):
         if not path:
             path = self.seqxFileFolder
 
-        pathstr = 'C:{}\\{}'.format(path, filename)
+        pathstr = rf'{path}/{filename}'
 
         self.write('MMEMory:OPEN:SASSet:SEQuence "{}"'.format(pathstr))
         # the above command is overlapping, but we want a blocking command
@@ -832,7 +855,6 @@ class AWG70000A(VisaInstrument):
         channel_min = -amplitude/2
 
         shape = np.shape(data)
-
         if len(shape) == 1:
             N = shape[0]
             binary_marker = b''

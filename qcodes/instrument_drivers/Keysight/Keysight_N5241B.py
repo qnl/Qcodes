@@ -269,6 +269,15 @@ class N5241B(PNABase):
                           set_cmd='CALC:FORM {}',
                           docstring="Sets the data format of the active trace. One of ['MLIN', 'MLOG', 'PHAS', 'UPH', 'IMAG', 'REAL', 'POL', 'SMIT', 'SADM', 'SWR', 'GDEL', 'KEL', 'FAHR', 'CEL']")
 
+        self.add_parameter('phase_offset',
+                           label='Phase Offset',
+                           get_cmd='CALC:OFFS:PHAS?',
+                           set_cmd='CALC:OFFS:PHAS {:.16f}',
+                           docstring='Global complex phase offset',
+                           vals=Numbers(-np.pi, np.pi),
+                           get_parser=float,
+                           unit='rad')
+
         # self.add_parameter('electrical_delay',
         #                    label='Electrical Delay',
         #                    get_cmd=':CALC1:CORR:EDEL:TIME?',
@@ -361,6 +370,10 @@ class N5241B(PNABase):
             query = "disp:wind:trac:del"
         else:
             query = "disp:wind:trac%d:del" % trace
+        self.write(query)
+
+    def auto_scale(self):
+        query = "DISP:WIND:TRAC:Y:AUTO"
         self.write(query)
 
     def s_parameter(self, s_param=None):

@@ -7,7 +7,7 @@ class AWG5208(AWG70000A):
     """
 
     def __init__(self, name: str, address: str,
-                 timeout: float=10, **kwargs) -> None:
+                 timeout: float=180, **kwargs) -> None:
         """
         Args:
             name: The name used internally by QCoDeS in the DataSet

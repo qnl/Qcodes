@@ -58,15 +58,15 @@ class StahlChannel(InstrumentChannel):
 
         self._channel_string = f"{channel_number:02d}"
         self._channel_number = channel_number
-
+        # TODO: fix the parser..
         self.add_parameter(
             "voltage",
-            get_cmd=f"{self.parent.identifier} U{self._channel_string}",
-            get_parser=chain(
-                re.compile(r"^([+\-]\d+,\d+) V$").findall,
-                partial(re.sub, ",", "."),
-                float
-            ),
+            get_cmd=f"{self.parent.identifier} Q{self._channel_string}",
+            # get_parser=chain(
+            #      re.compile(r" mV$").findall,
+            #      partial(re.sub, ",", "."),
+            #      float
+            # ),
             set_cmd=self._set_voltage,
             unit="V",
             vals=Numbers(
@@ -246,3 +246,6 @@ class Stahl(VisaInstrument):
     @property
     def identifier(self):
         return f"{self.model}{self.serial_number}"
+
+    def __del__(self):
+        pass
